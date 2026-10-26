@@ -1,2 +1,2 @@
-# Retain the local Sites checkout only during migration; GitHub Pages serves docs/.
+# Keep the legacy Sites checkout out of the GitHub repository; Pages serves docs/.
 sites/
