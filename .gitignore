@@ -1,0 +1,2 @@
+# Retain the local Sites checkout only during migration; GitHub Pages serves docs/.
+sites/
