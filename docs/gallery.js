@@ -1,4 +1,4 @@
-// The table records the supplied ten-day plan; the later timeline is a separate proposal.
+// The supplied ten-day route is kept as a secondary reference.
 const originalDays = [
   ['LA → Redding，长途赶路', 'Redding 1 晚'],
   ['Redding → Ashland，圣诞灯饰、小镇漫步', 'Ashland 1 晚'],
@@ -87,11 +87,30 @@ const originalStops = [
 ];
 
 const gallery = document.querySelector('#stop-gallery');
+const displayStops = [...originalStops];
+displayStops.splice(4, 0, {name:'Multnomah Falls', note:'哥伦比亚河峡谷瀑布 · 补充景点', rating:'★★★☆☆', duration:'45–90 分钟', weather:'湿冷、结冰风险', photos:[
+  photo('falls-winter.jpg','20190305 FS CRGNSA A frozen Multnomah Falls Bart Kicklighter.jpg','美国林务局','公共领域','冬季结冰的 Multnomah Falls'),
+]});
+const descriptions = {
+  'Redding':'北上途中适合住宿和补给；有余暇可看 Sacramento River 旁的 Sundial Bridge。',
+  'Ashland':'市中心 Plaza 与历史街区适合短暂漫步，冬季跨越 Siskiyou Pass 时以路况为先。',
+  'Silverton':'圣诞市集适合夜间停留；出发前核对开放场次。照片展示小镇及周边，不是市集现场。',
+  'Portland':'原始路线计划在这里过夜；城市餐饮选择多，也可按路线作为中转点。',
+  'Mount Hood':'这趟旅行的雪山核心。住两晚，把完整一天留给雪景、轻量活动与木屋休息。',
+  'Cannon Beach':'Haystack Rock 与冬季海浪值得留一晚，海边活动要避开高浪。',
+  'Multnomah Falls':'峡谷瀑布值得短访；结冰时只去安全开放区域。',
+  'Newport':'Yaquina Head 与海湾适合海岸观景，可根据天气决定停留时间。',
+  'Florence':'Heceta Head 一带适合沿海观景，也可作为南下途中的住宿点。',
+  '俄勒冈南部海岸':'Bandon、Gold Beach 与 Samuel H. Boardman 一带适合分段体验，留意风雨与补能。',
+  'Crescent City':'Battery Point Lighthouse 与海岸可短停，也是通往 Jedediah Smith 红杉林的入口。',
+  '红杉森林':'选择开放且靠近 US‑101 的短步道；雨后核对道路和步道状态。',
+  'Eureka':'Old Town 街区可在返程前后短访，也适合住宿和补给。'
+};
 const creditMarkup = selected => `<a href="${selected.source}" target="_blank" rel="noopener">${selected.author} · 来源 ↗</a> · ${selected.licenseUrl ? `<a href="${selected.licenseUrl}" target="_blank" rel="noopener">${selected.license}</a>` : selected.license}`;
-gallery.innerHTML = originalStops.map((stop, index) => {
+gallery.innerHTML = displayStops.map((stop, index) => {
   const first = stop.photos[0];
   return `<article class="stop-card" data-stop="${index}" data-photo="0">
-    <div class="stop-card-head"><span>${String(index + 1).padStart(2, '0')} / 原计划地点</span><h4>${stop.name}</h4><p>${stop.note}</p></div>
+    <div class="stop-card-head"><span>${String(index + 1).padStart(2, '0')} / 景点与活动</span><h4>${stop.name}</h4><p>${descriptions[stop.name]}</p></div>
     <figure class="stop-photo"><img src="assets/${first.file}" alt="${first.caption}" loading="lazy"><figcaption>${first.caption}</figcaption></figure>
     <div class="stop-controls"><button type="button" class="stop-prev" aria-label="查看 ${stop.name} 上一张照片">←</button><span class="stop-count" aria-live="polite">1 / ${stop.photos.length}</span><button type="button" class="stop-next" aria-label="查看 ${stop.name} 下一张照片">→</button></div>
     <div class="stop-details"><span class="stop-rating">推荐程度 <b aria-label="${stop.rating.split('★').length - 1} 星">${stop.rating}</b></span><span>建议停留 <b>${stop.duration}</b></span><span>天气情况 <b>${stop.weather}</b></span></div>
@@ -100,7 +119,7 @@ gallery.innerHTML = originalStops.map((stop, index) => {
 }).join('');
 
 function showStopPhoto(card, delta) {
-  const stop = originalStops[Number(card.dataset.stop)];
+  const stop = displayStops[Number(card.dataset.stop)];
   const nextIndex = (Number(card.dataset.photo) + delta + stop.photos.length) % stop.photos.length;
   const selected = stop.photos[nextIndex];
   card.dataset.photo = String(nextIndex);
