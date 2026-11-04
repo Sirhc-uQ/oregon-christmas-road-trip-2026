@@ -16,18 +16,30 @@ const customTemplates = {
     {stay:'Mount Hood',stops:['Multnomah Falls']},{stay:'Mount Hood',stops:[]},
     {stay:'Cannon Beach',stops:[]},{stay:'Crescent City',stops:['Newport']},
     {stay:'San Francisco',stops:['Redwood Forest']}
+  ],
+  v1: [
+    {stay:'Sacramento',stops:[]},{stay:'Ashland',stops:['Mount Shasta']},
+    {stay:'Mount Hood',stops:['Silver Falls State Park']},{stay:'Mount Hood',stops:[]},
+    {stay:'Portland',stops:['Multnomah Falls','Latourell Falls']},
+    {stay:'Florence',stops:['Ecola State Park','Cannon Beach']},
+    {stay:'Eureka',stops:['Gold Beach','Samuel H. Boardman State Scenic Corridor','Prairie Creek Redwoods State Park']},
+    {stay:'San Francisco',stops:[]},{stay:'Los Angeles',stops:[]}
   ]
 };
-const lodgingPlaces=['Redding','Ashland','Medford','Eugene','Silverton','Portland','Mount Hood','Cannon Beach','Newport','Florence','Bandon','Gold Beach','Crescent City','Eureka'];
-const attractionPlaces=['Silverton','Multnomah Falls','Mount Hood','Cannon Beach','Newport','Florence','Bandon','Gold Beach','Redwood Forest','Crater Lake'];
-const transitPlaces=['Redding','Ashland','Medford','Eugene','Portland','Crescent City','Eureka'];
+const lodgingPlaces=['Sacramento','Redding','Ashland','Medford','Eugene','Silverton','Portland','Mount Hood','Cannon Beach','Newport','Florence','Bandon','Gold Beach','Crescent City','Eureka'];
+const endPlaces=['San Francisco','Los Angeles'];
+const attractionPlaces=['Mount Shasta','Silver Falls State Park','Silverton','Multnomah Falls','Latourell Falls','Mount Hood','Ecola State Park','Cannon Beach','Newport','Florence','Bandon','Gold Beach','Samuel H. Boardman State Scenic Corridor','Prairie Creek Redwoods State Park','Redwood Forest','Crater Lake'];
+const transitPlaces=['Sacramento','Redding','Ashland','Medford','Eugene','Portland','Crescent City','Eureka'];
 const mapSearch={
-  'San Francisco':'San Francisco, CA',Redding:'Redding, CA',Ashland:'Ashland, OR',Medford:'Medford, OR',
+  'San Francisco':'San Francisco, CA','Los Angeles':'Los Angeles, CA',Sacramento:'Sacramento, CA',Redding:'Redding, CA',Ashland:'Ashland, OR',Medford:'Medford, OR',
   Eugene:'Eugene, OR',Silverton:'Silverton, OR',Portland:'Portland, OR',
   'Mount Hood':'Government Camp, OR','Cannon Beach':'Cannon Beach, OR',Newport:'Newport, OR',
   Florence:'Florence, OR',Bandon:'Bandon, OR','Gold Beach':'Gold Beach, OR',
   'Crescent City':'Crescent City, CA','Redwood Forest':'Jedediah Smith Redwoods State Park',
-  Eureka:'Eureka, CA','Multnomah Falls':'Multnomah Falls, OR','Crater Lake':'Crater Lake Rim Village, OR'
+  Eureka:'Eureka, CA','Multnomah Falls':'Multnomah Falls, OR','Latourell Falls':'Latourell Falls, OR',
+  'Mount Shasta':'Mount Shasta, CA','Silver Falls State Park':'Silver Falls State Park, OR',
+  'Ecola State Park':'Ecola State Park, OR','Samuel H. Boardman State Scenic Corridor':'Samuel H. Boardman State Scenic Corridor, OR',
+  'Prairie Creek Redwoods State Park':'Prairie Creek Redwoods State Park, CA','Crater Lake':'Crater Lake Rim Village, OR'
 };
 const roadEdges=[
   ['San Francisco','Redding',217,4.1],['Redding','Ashland',130,2.4],['Ashland','Medford',13,.3],
@@ -43,7 +55,18 @@ const roadEdges=[
   ['Eugene','Mount Hood',152,3.5],['Mount Hood','Cannon Beach',136,3.2],
   ['Cannon Beach','Medford',340,6],['Florence','Gold Beach',140,3.3],
   ['Gold Beach','Eureka',140,3.5],['Cannon Beach','Crescent City',341,8.6],
-  ['Medford','Crater Lake',80,2.3],['Crater Lake','Eugene',160,4.1]
+  ['Medford','Crater Lake',80,2.3],['Crater Lake','Eugene',160,4.1],
+  ['San Francisco','Sacramento',90,1.7],['Sacramento','Mount Shasta',230,3.8],
+  ['Redding','Mount Shasta',60,1.1],['Mount Shasta','Ashland',95,1.7],
+  ['Ashland','Silver Falls State Park',250,4.9],['Silver Falls State Park','Silverton',15,.4],
+  ['Silver Falls State Park','Mount Hood',82,2],
+  ['Multnomah Falls','Latourell Falls',12,.3],['Latourell Falls','Portland',28,.6],
+  ['Portland','Ecola State Park',85,1.9],['Ecola State Park','Cannon Beach',5,.2],
+  ['Gold Beach','Samuel H. Boardman State Scenic Corridor',30,.7],
+  ['Samuel H. Boardman State Scenic Corridor','Crescent City',32,.8],
+  ['Crescent City','Prairie Creek Redwoods State Park',43,1],
+  ['Prairie Creek Redwoods State Park','Eureka',50,1.1],
+  ['San Francisco','Los Angeles',380,6.5]
 ];
 const roadGraph={};
 roadEdges.forEach(([from,to,miles,hours])=>{
@@ -86,7 +109,7 @@ function loadCustomTemplate(key){
 function validDraft(start,days){
   return startPlaces.includes(start)||start===''
     ? Array.isArray(days)&&days.length<=10&&days.every((day,index)=>day&&
-      (index===days.length-1?day.stay==='San Francisco':day.stay===''||lodgingPlaces.includes(day.stay))&&
+      (index===days.length-1?endPlaces.includes(day.stay):day.stay===''||lodgingPlaces.includes(day.stay))&&
       Array.isArray(day.stops)&&day.stops.every(name=>validStops.has(name)))
     : false;
 }
@@ -146,7 +169,7 @@ function buildCustomPlan(){
         `从 ${origin} 前往 ${day.stay}，沿途按路况安排休息与补能。`,
       times:day.stops.length?day.stops.map(name=>`停靠 ${name}`):['按路况休息与补能'],
       drive:dayMiles?`约 ${miles} 英里 · 基础车程 ${hours} 小时`:'当地活动 · 基础车程 0 小时',
-      stay:index===customDays.length-1?'终点 San Francisco':`住 ${day.stay}`,risk});
+      stay:index===customDays.length-1?`终点 ${day.stay}`:`住 ${day.stay}`,risk});
     dayEstimates.push({miles,hours});
     legs.push([origin,day.stay,`约 ${hours} 小时`,`约 ${miles} 英里 · 第 ${index+1} 天`,googlePath(visits)]);
   });
@@ -157,7 +180,7 @@ function buildCustomPlan(){
   if(longDays.length)warnings.push(`${longDays.join('、')} 的基础车程达到或超过 7 小时，应减少停靠或增加一天。`);
   if(active.has('Crater Lake'))warnings.push('Crater Lake 冬季道路可能关闭，不能作为必到点；出发前核查 NPS 路况。');
   warnings.push('所有时间都是静态道路走廊粗估，未含充电、游览、用餐、休息与冬季延误。');
-  planVariants.custom={name:'自定义计划',start:customStart,ready:true,
+  planVariants.custom={name:'自定义计划',start:customStart,end:customDays.at(-1).stay,ready:true,
     eyebrow:`04 / 每日安排 · 自定义计划 · ${customDays.length} 天`,
     title:'自定义计划，<br><em>按自己的节奏出发。</em>',
     miles:`约 ${Math.round(totalMiles)} 英里`,hours:`约 ${numberLabel(totalHours)} 小时基础驾驶`,
@@ -172,7 +195,7 @@ function renderCustomEditor(){
   document.querySelector('#custom-day-list').innerHTML=customDays.length?customDays.map((day,index)=>{
     const origin=index?customDays[index-1].stay:customStart;
     const last=index===customDays.length-1;
-    const lodging=last?'<strong class="custom-fixed-stay">San Francisco · 行程终点</strong>':
+    const lodging=last?`<select class="custom-stay" data-day="${index}" aria-label="第 ${index+1} 天终点">${endPlaces.map(name=>`<option value="${name}" ${name===day.stay?'selected':''}>${name}</option>`).join('')}</select>`:
       `<select class="custom-stay" data-day="${index}" aria-label="第 ${index+1} 天住宿地"><option value="">请选择住宿地</option>${lodgingPlaces.map(name=>`<option value="${name}" ${name===day.stay?'selected':''}>${name}</option>`).join('')}</select>`;
     const stopOptions=`<option value="">选择沿途停靠点</option><optgroup label="景点与活动">${attractionPlaces.map(name=>`<option value="${name}">${name}</option>`).join('')}</optgroup><optgroup label="中转城市">${transitPlaces.map(name=>`<option value="${name}">${name}</option>`).join('')}</optgroup>`;
     const chips=day.stops.length?day.stops.map((name,stopIndex)=>`<div class="custom-stop-chip"><span>${stopIndex+1}. ${name}</span><button type="button" data-action="up" data-day="${index}" data-stop="${stopIndex}" aria-label="将 ${name} 提前" ${stopIndex===0?'disabled':''}>↑</button><button type="button" data-action="down" data-day="${index}" data-stop="${stopIndex}" aria-label="将 ${name} 后移" ${stopIndex===day.stops.length-1?'disabled':''}>↓</button><button type="button" data-action="remove" data-day="${index}" data-stop="${stopIndex}" aria-label="移除 ${name}">×</button></div>`).join(''):'<small class="custom-empty">这天尚未加入额外停靠点</small>';
